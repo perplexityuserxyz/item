@@ -1,4 +1,6 @@
-import sqlite3 from datetime import datetime from typing import Optional, List, Dict, Tuple
+import sqlite3
+from datetime import datetime
+from typing import Optional, List, Dict, Tuple
 
 class Database: def init(self, db_name: str = "osint_bot.db"): self.db_name = db_name self.init_database()
 
