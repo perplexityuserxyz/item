@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # IMPORTANT: Replace with your actual bot token from @BotFather
-BOT_TOKEN = os.getenv('BOT_TOKEN', 'YOUR_BOT_TOKEN_HERE')
+BOT_TOKEN = os.getenv('BOT_TOKEN', '8219144171:AAFl1n7rwZPxA4sNbjlHIwGDX-flAcETDA8')
 
 OWNER_ID = 7924074157
 SUDO_USERS = [7924074157, 5294360309, 7905267752]
