@@ -295,29 +295,32 @@ def add_commission(self, referrer_id: int, amount: int):
     commission = int(amount * 0.30)
     self.update_credits(referrer_id, commission, 'add')
 
+# ---------------- redeem codes ----------------
 def create_redeem_code(self, code: str, credits: int):
-    conn = get_db()
+    conn = self.get_connection()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO redeem_codes (code, credits) VALUES (?, ?)", (code, credits))
     conn.commit()
     conn.close()
 
-def redeem_code(self, user_id: int, code: str):
-    conn = get_db()
+def redeem_code(self, user_id: int, code: str) -> Tuple[bool, str]:
+    conn = self.get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT credits, used_by FROM redeem_codes WHERE code = ?", (code,))
     row = cursor.fetchone()
-    
+
     if not row:
+        conn.close()
         return False, "❌ Invalid code!"
     if row["used_by"]:
+        conn.close()
         return False, "❌ This code has already been used!"
-    
+
     credits = row["credits"]
-    cursor.execute("UPDATE users SET credits = credits + ? WHERE id = ?", (credits, user_id))
-    cursor.execute("UPDATE redeem_codes SET used_by = ?, used_at = CURRENT_TIMESTAMP WHERE code = ?", (user_id, code))
+    cursor.execute("UPDATE users SET credits = credits + ? WHERE user_id = ?", (credits, user_id))
+    cursor.execute("UPDATE redeem_codes SET used_by = ?, used_at = ? WHERE code = ?", (user_id, datetime.now().isoformat(), code))
     conn.commit()
     conn.close()
-    
+
     return True, f"✅ Successfully redeemed! {credits} credits added."
 
