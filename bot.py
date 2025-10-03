@@ -644,7 +644,30 @@ async def protected_list_command(update: Update, context: ContextTypes.DEFAULT_T
         text = "No protected numbers found."
     
     await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-
+    
+async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    if len(context.args) < 1:
+        await update.message.reply_text("⚠️ Usage: /redeem <code>")
+        return
+    
+    code = context.args[0].strip().upper()
+    success, msg = db.redeem_code(user_id, code)
+    await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+    
+async def create_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_admin(update.effective_user.id):
+        await update.message.reply_text("❌ Only admins can create redeem codes!")
+        return
+    
+    if len(context.args) < 2:
+        await update.message.reply_text("⚠️ Usage: /createcode <CODE> <CREDITS>")
+        return
+    
+    code = context.args[0].strip().upper()
+    credits = int(context.args[1])
+    db.create_redeem_code(code, credits)
+    await update.message.reply_text(f"✅ Redeem code created: <b>{code}</b> ({credits} credits)", parse_mode=ParseMode.HTML)    
 async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, lookup_type: str, query: str):
     user_id = update.effective_user.id
     chat_type = update.message.chat.type
@@ -734,8 +757,20 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
     if result:
         if chat_type != 'private':
             result = result.split(BRANDING_FOOTER)[0] + BRANDING_FOOTER
-        
-        await update.message.reply_text(result, parse_mode=ParseMode.HTML)
+
+        # 🚨 FIX: Agar result 4000+ characters hai to file me save karke bhejo
+        if len(result) > 4000:
+            file_name = f"{lookup_type}_{query}.html"
+            with open(file_name, "w", encoding="utf-8") as f:
+                f.write(result)
+
+            await update.message.reply_document(
+                document=open(file_name, "rb"),
+                filename=file_name,
+                caption="📂 Result is too long, sent as file."
+            )
+        else:
+            await update.message.reply_text(result, parse_mode=ParseMode.HTML)
     else:
         await update.message.reply_text("❌ Failed to fetch data!")
 
@@ -876,7 +911,8 @@ def main():
     application.add_handler(CommandHandler("aadhar", aadhar_command))
     application.add_handler(CommandHandler("aadhar2fam", aadhar2fam_command))
     application.add_handler(CommandHandler("callhis", callhis_command))
-    
+    application.add_handler(CommandHandler("redeem", redeem))
+    application.add_handler(CommandHandler("createcode", create_code))
     application.add_handler(CommandHandler("addcredits", addcredits_command))
     application.add_handler(CommandHandler("removecredits", removecredits_command))
     application.add_handler(CommandHandler("ban", ban_command))
