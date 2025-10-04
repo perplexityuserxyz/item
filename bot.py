@@ -16,7 +16,7 @@ from telegram.ext import (
     filters
 )
 from telegram.error import Forbidden, BadRequest
-
+from html import escape
 from database import Database
 from api_handlers import APIHandler
 from config import *  # BOT_TOKEN, OWNER_ID, SUDO_USERS, REQUIRED_CHANNELS, CHANNEL_LINK_1, CHANNEL_LINK_2, BRANDING_FOOTER, ADMIN_CONTACT, START_LOG_CHANNEL, SEARCH_LOG_CHANNEL, CREDIT_PRICES, CALL_HISTORY_COST
@@ -609,20 +609,22 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(update.effective_user.id):
         await safe_send(update, context, "❌ Access denied!")
         return
-    stats = db.get_stats()
+
+    stats = db.get_stats() or {}
+
     text = (
         "━━━━━━━━━━━━━━━━━━━\n"
         "📊 <b>Bot Statistics</b>\n"
         "━━━━━━━━━━━━━━━━━━━\n\n"
-        f"👥 <b>Total Users:</b> {stats['total_users']}\n"
-        f"✅ <b>Active Users:</b> {stats['active_users']}\n"
-        f"🚫 <b>Banned Users:</b> {stats['banned_users']}\n"
-        f"🔍 <b>Total Searches:</b> {stats['total_searches']}\n"
-        f"🤝 <b>Total Referrals:</b> {stats['total_referrals']}\n"
-        f"💳 <b>Total Credits:</b> {stats['total_credits']}"
+        f"👥 <b>Total Users:</b> {stats.get('total_users', 0)}\n"
+        f"✅ <b>Active Users:</b> {stats.get('active_users', 0)}\n"
+        f"🚫 <b>Banned Users:</b> {stats.get('banned_users', 0)}\n"
+        f"🔍 <b>Total Searches:</b> {stats.get('total_searches', 0)}\n"
+        f"🤝 <b>Total Referrals:</b> {stats.get('total_referrals', 0)}\n"
+        f"💳 <b>Total Credits:</b> {stats.get('total_credits', 0)}"
     )
-    await safe_send(update, context, text)
 
+    await safe_send(update, context, text, parse_mode="HTML")
 async def gcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(update.effective_user.id):
         await safe_send(update, context, "❌ Access denied!")
@@ -655,31 +657,37 @@ async def protected_list_command(update: Update, context: ContextTypes.DEFAULT_T
     await safe_send(update, context, text)
 
 # ---------- Redeem / Create Code ----------
+
 async def redeem(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if len(context.args) < 1:
         await safe_send(update, context, "⚠️ Usage: /redeem <code>")
         return
+    
     code = context.args[0].strip().upper()
     success, msg = db.redeem_code(user_id, code)
-    await safe_send(update, context, msg)
+    await safe_send(update, context, escape(msg), parse_mode="HTML")
+
 
 async def create_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(update.effective_user.id):
         await safe_send(update, context, "❌ Only admins can create redeem codes!")
         return
+
     if len(context.args) < 2:
         await safe_send(update, context, "⚠️ Usage: /createcode <CODE> <CREDITS>")
         return
+
     code = context.args[0].strip().upper()
     try:
         credits = int(context.args[1])
     except ValueError:
         await safe_send(update, context, "❌ Credits must be a number!")
         return
+
     created = db.create_redeem_code(code, credits)
     if created:
-        await safe_send(update, context, f"✅ Redeem code created: <b>{code}</b> ({credits} credits)")
+        await safe_send(update, context, f"✅ Redeem code created: <b>{escape(code)}</b> ({credits} credits)", parse_mode="HTML")
     else:
         await safe_send(update, context, "❌ Code already exists!")
 
