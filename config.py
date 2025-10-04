@@ -37,12 +37,12 @@ REFERRAL_COMMISSION_RATE = 0.30
 CALL_HISTORY_COST = 600
 
 CREDIT_PRICES = [
-    {'credits': 100, 'inr': 30, 'usdt': 0.35},
-    {'credits': 200, 'inr': 55, 'usdt': 0.65},
-    {'credits': 500, 'inr': 130, 'usdt': 1.55},
-    {'credits': 1000, 'inr': 250, 'usdt': 3.0},
-    {'credits': 2000, 'inr': 480, 'usdt': 5.7},
-    {'credits': 5000, 'inr': 1150, 'usdt': 13.5},
+    {'credits': 10, 'inr': 30, 'usdt': 0.35},
+    {'credits': 20, 'inr': 55, 'usdt': 0.65},
+    {'credits': 30, 'inr': 130, 'usdt': 1.55},
+    {'credits': 100, 'inr': 250, 'usdt': 3.0},
+    {'credits': 200, 'inr': 480, 'usdt': 5.7},
+    {'credits': 500, 'inr': 1150, 'usdt': 13.5},
 ]
 
 API_ENDPOINTS = {
