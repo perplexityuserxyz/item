@@ -3,64 +3,59 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Get bot token from environment variable
-# Set it using: export BOT_TOKEN='your_token_here'
-# Or create a .env file with: BOT_TOKEN=your_token_here
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 if not BOT_TOKEN:
-    raise ValueError(
-        "BOT_TOKEN not found! Please set it as an environment variable:\n"
-        "  export BOT_TOKEN='your_bot_token_from_botfather'\n"
-        "Or create a .env file with: BOT_TOKEN=your_token_here"
-    )
+    raise ValueError("BOT_TOKEN not found! Set BOT_TOKEN in env or .env file.")
+
+VERSION = "v2"
 
 OWNER_ID = 7924074157
 SUDO_USERS = [7924074157, 5294360309, 7905267752]
 
 REQUIRED_CHANNELS = [
-    {'id': '@DataTraceUpdates', 'name': 'DataTrace Updates'},
-    {'id': '@DataTraceOSINTSupport', 'name': 'DataTrace OSINT Support'}
+    {"id": "@DataTraceUpdates", "name": "DataTrace Updates"},
+    {"id": -1003498235341, "name": "DataTrace Support"},
 ]
 
 START_LOG_CHANNEL = -1002765060940
 SEARCH_LOG_CHANNEL = -1003066524164
 
-ADMIN_CONTACT = '@DataTraceSupport'
-CHANNEL_LINK_1 = 'https://t.me/DataTraceUpdates'
-CHANNEL_LINK_2 = 'https://t.me/DataTraceOSINTSupport'
+ADMIN_CONTACT = "@DATATRACEADMIN"
+CHANNEL_LINK_1 = "https://t.me/DataTraceUpdates"
+CHANNEL_LINK_2 = "https://t.me/+JTDIx-NzrAdmYWFl"
 
-FREE_CREDITS_ON_START = 2
-FREE_CREDITS_ON_REFERRAL = 1
-REFERRAL_COMMISSION_RATE = 0.30
-
-CALL_HISTORY_COST = 600
-
-CREDIT_PRICES = [
-    {'credits': 10, 'inr': 30, 'usdt': 0.35},
-    {'credits': 20, 'inr': 55, 'usdt': 0.65},
-    {'credits': 30, 'inr': 130, 'usdt': 1.55},
-    {'credits': 100, 'inr': 250, 'usdt': 3.0},
-    {'credits': 200, 'inr': 480, 'usdt': 5.7},
-    {'credits': 500, 'inr': 1150, 'usdt': 13.5},
-]
+# Diamonds
+MIN_DIAMOND_PURCHASE = 50
+DIAMOND_PRICE_INR = 5  # per diamond
+REFERRAL_REWARD_DIAMOND = 1
 
 API_ENDPOINTS = {
-    'upi': 'https://upi-info.vercel.app/api/upi',
-    'number': 'http://osintx.info/API/krobetahack.php',
-    'telegram': 'https://tg-info-neon.vercel.app/user-details',
-    'ip': 'https://karmali.serv00.net/ip_api.php',
-    'pakistan': 'https://pak-num-api.vercel.app/search',
-    'aadhar_family': 'https://family-members-n5um.vercel.app/fetch',
-    'aadhar': 'http://osintx.info/API/krobetahack.php',
-    'call_history': 'https://my-vercel-flask-qmfgrzwdl-okvaipro-svgs-projects.vercel.app/api/call_statement'
+    "upi": "https://j4tnx-upi-info-api.onrender.com/upi_id=",
+    "verify": "https://chumt-d8kr3hc69-okvaipro-svgs-projects.vercel.app/verify?query={query}",
+    "pan": "https://panapi-6g7kjm4ah-okvaipro-svgs-projects.vercel.app/api/pan?pan={pan}",
+    "number": "https://no-info-api.onrender.com/num/{number}",
+    "vehicle_rc_pdf": "http://3.111.238.230:5004/generate_rc?number={number}",
+    "ip": "https://karmali.serv00.net/ip_api.php",
+    "pakistan": "https://pak-num-api.vercel.app/search",
+    "aadhar_family": "https://aadharapi-5z8qp4sqw-okvaipro-svgs-projects.vercel.app/fetch",
+    "aadhar": "https://dt-support.gauravyt566.workers.dev/?aadhaar={aadhar}",
+    "numfb": "https://numfb-3m572zbr1-okvaipro-svgs-projects.vercel.app/lookup?number={number}&key={key}",
+    "insta_profile": "https://anmolinstainfo.worldgreeker.workers.dev/user?username={username}",
+    "insta_posts": "https://anmolinstainfo.worldgreeker.workers.dev/posts?username={username}",
+    "bank_ifsc": "https://ifsc.razorpay.com/{ifsc}",
 }
 
 API_KEYS = {
-    'number': 'SHAD0WINT3L',
-    'aadhar': 'SHAD0WINT3L',
-    'aadhar_family': 'paidchx',
-    'upi': '456'
+    "number": "",
+    "aadhar_family": "datatrace",
+    "upi": "",
+    "numfb": "chxprm456",
 }
 
-BRANDING_FOOTER = f"\n\n━━━━━━━━━━━━━━━━━━━\n🔗 Join: {CHANNEL_LINK_1}\n📢 Support: {CHANNEL_LINK_2}\n💬 Contact Admin: {ADMIN_CONTACT}\n━━━━━━━━━━━━━━━━━━━"
+BRANDING_FOOTER = (
+    "\n\n----------------------\n"
+    f"Updates: {CHANNEL_LINK_1}\n"
+    f"Support: {CHANNEL_LINK_2}\n"
+    f"Contact: {ADMIN_CONTACT}"
+)
