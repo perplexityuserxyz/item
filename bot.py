@@ -63,6 +63,27 @@ def is_sudo(user_id: int) -> bool:
 def is_admin(user_id: int) -> bool:
     return is_owner(user_id) or is_sudo(user_id)
 
+
+def safe_has_logged_start(user_id: int) -> bool:
+    """
+    Backward compatible helper: some older deployments may miss has_logged_start on Database.
+    """
+    checker = getattr(db, "has_logged_start", None)
+    if callable(checker):
+        return checker(user_id)
+    return False
+
+
+def safe_ensure_daily_counter(user_id: int) -> dict:
+    """
+    Backward compatible helper: falls back to get_user when ensure_daily_counter is absent.
+    """
+    ensure = getattr(db, "ensure_daily_counter", None)
+    if callable(ensure):
+        return ensure(user_id)
+    return db.get_user(user_id) or {}
+
+
 def queue_autodelete(message, context: ContextTypes.DEFAULT_TYPE, delay: int = 300):
     if not message:
         return
@@ -121,7 +142,7 @@ async def referral_button(context: ContextTypes.DEFAULT_TYPE, user_id: int) -> I
 
 
 def format_home_text(user, user_data, referral_link: str) -> str:
-    daily_user = db.ensure_daily_counter(user.id)
+    daily_user = safe_ensure_daily_counter(user.id)
     daily_used = daily_user.get("daily_search_count", 0) if daily_user else 0
     free_left = max(0, DAILY_FREE_GROUP_LIMIT - daily_used)
     return (
@@ -254,14 +275,14 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     db.update_last_active(user.id)
 
     if referrer_id:
-        if not db.has_logged_start(user.id):
+        if not safe_has_logged_start(user.id):
             await log_to_channel(
                 context,
                 START_LOG_CHANNEL,
                 f"🚀 New user via referral\nName: {escape(user.first_name)}\nID: {user.id}\nReferrer: {referrer_id}",
             )
     else:
-        if not db.has_logged_start(user.id):
+        if not safe_has_logged_start(user.id):
             await log_to_channel(
                 context,
                 START_LOG_CHANNEL,
@@ -326,7 +347,7 @@ async def credits_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if not user:
         return
-    user_data = db.ensure_daily_counter(user.id)
+    user_data = safe_ensure_daily_counter(user.id)
     if not user_data:
         await safe_send(update, context, "Use /start first.")
         return
@@ -635,7 +656,7 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
 
     # Group quota handling (non-admin)
     if chat_type != "private" and not is_admin(user_id):
-        user_data = db.ensure_daily_counter(user_id)
+        user_data = safe_ensure_daily_counter(user_id)
         daily_used = user_data.get("daily_search_count", 0) if user_data else 0
         credits = user_data.get("credits", 0) if user_data else 0
         if daily_used >= DAILY_FREE_GROUP_LIMIT:
