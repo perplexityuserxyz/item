@@ -32,7 +32,7 @@ REFERRAL_REWARD_DIAMOND = 1
 
 API_ENDPOINTS = {
     "upi": "https://j4tnx-upi-info-api.onrender.com/upi_id=",
-    "verify": "https://chumt-d8kr3hc69-okvaipro-svgs-projects.vercel.app/verify?query={query}",
+    "verify": "https://chumt-qap149hma-okvaipro-svgs-projects.vercel.app/verify?query={query}",
     "pan": "https://panapi-6g7kjm4ah-okvaipro-svgs-projects.vercel.app/api/pan?pan={pan}",
     "number": "https://no-info-api.onrender.com/num/{number}",
     "vehicle_rc_pdf": "http://3.111.238.230:5004/generate_rc?number={number}",
