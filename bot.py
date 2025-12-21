@@ -309,7 +309,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🔍 <b>Lookups (free in groups)</b>\n"
         "• /num [number] - Number info\n"
         "• /upi [upi_id] - UPI info\n"
-        "• /verify [upi_id] - Verify UPI (30s rate limit)\n"
         "• /pan [pan] - PAN info\n"
         "• /ip [ip] - IP info\n"
         "• /pak [number] - Pakistan info\n"
@@ -441,7 +440,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🔍 <b>Lookups (free in groups)</b>\n"
             "• /num [number]\n"
             "• /upi [upi_id]\n"
-            "• /verify [upi_id] - 30s rate limit\n"
             "• /pan [pan]\n"
             "• /ip [ip]\n"
             "• /pak [number]\n"
@@ -467,7 +465,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "🔍 <b>Lookups (free in groups)</b>\n"
             "• /num [number] - Number info\n"
             "• /upi [upi_id] - UPI info\n"
-            "• /verify [upi_id] - Verify UPI (30s rate limit)\n"
             "• /pan [pan] - PAN info\n"
             "• /ip [ip] - IP info\n"
             "• /pak [number] - Pakistan info\n"
@@ -689,11 +686,6 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
     if db.is_protected(query) and not is_owner(user_id):
         return await safe_send(update, context, "This number is protected.")
 
-    # Rate limiting for verify
-    if lookup_type == "verify":
-        if not db.can_verify_now(user_id):
-            return await safe_send(update, context, "Rate limit exceeded. You can verify again in 30 seconds.")
-
     # Charging logic
     charge = 0 if is_admin(user_id) else (cost_diamonds if chat_type == "private" else 0)
 
@@ -709,15 +701,7 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
             )
         db.update_diamonds(user_id, charge, "deduct")
 
-    if lookup_type == "verify":
-        msg = await safe_send(update, context, "searching all databases ...")
-        await asyncio.sleep(1)
-        await context.bot.edit_message_text(chat_id=msg.chat_id, message_id=msg.message_id, text="connecting to server ...")
-        await asyncio.sleep(1)
-        await context.bot.edit_message_text(chat_id=msg.chat_id, message_id=msg.message_id, text="fetching details")
-        await asyncio.sleep(1)
-    else:
-        await safe_send(update, context, "🔍 Searching...", autodelete=False)
+    await safe_send(update, context, "🔍 Searching...", autodelete=False)
 
     db.log_search(user_id, lookup_type, query)
     await log_to_channel(
@@ -731,8 +715,6 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
     try:
         if lookup_type == "upi":
             result = await api_handler.fetch_upi_info(query)
-        elif lookup_type == "verify":
-            result = await api_handler.fetch_verify_upi(query)
         elif lookup_type == "pan":
             result = await api_handler.fetch_pan_info(query)
         elif lookup_type == "number":
@@ -773,9 +755,6 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
         return
 
     try:
-        if lookup_type == "verify":
-            await context.bot.delete_message(chat_id=msg.chat_id, message_id=msg.message_id)
-
         # strip text footer, add button footer
         if isinstance(result, str) and BRANDING_FOOTER in result:
             result = result.replace(BRANDING_FOOTER, "").strip()
@@ -792,10 +771,6 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
                 pass
         else:
             await safe_send(update, context, result, reply_markup=footer_buttons(context))
-
-        # Update last verify time for verify type
-        if lookup_type == "verify":
-            db.update_last_verify_time(user_id)
 
         # Refer prompt every 3 searches (group, non-admin)
         if new_daily_count and new_daily_count % 3 == 0 and chat_type != "private" and not is_admin(user_id):
@@ -823,12 +798,6 @@ async def upi_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         return await safe_send(update, context, "Usage: /upi [upi_id]")
     await handle_lookup(update, context, "upi", context.args[0])
-
-
-async def verify_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        return await safe_send(update, context, "Usage: /verify [upi_id]")
-    await handle_lookup(update, context, "verify", context.args[0])
 
 
 async def pan_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -960,7 +929,6 @@ def main():
 
     application.add_handler(CommandHandler("num", num_command))
     application.add_handler(CommandHandler("upi", upi_command))
-    application.add_handler(CommandHandler("verify", verify_command))
     application.add_handler(CommandHandler("pan", pan_command))
     application.add_handler(CommandHandler("ip", ip_command))
     application.add_handler(CommandHandler("pak", pak_command))
