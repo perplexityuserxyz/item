@@ -98,17 +98,6 @@ class APIHandler:
             return INFO_NOT_FOUND
         return self._format_upi(data, upi_id)
 
-    async def fetch_verify_upi(self, upi_id: str) -> str:
-        """Fetch and format verified UPI information with custom messages."""
-        if not upi_id:
-            return "no result found for your query"
-
-        url = API_ENDPOINTS["verify"].format(query=upi_id)
-        data = await self._fetch_data(url)
-        if not data:
-            return "no result found for your query"
-        return self._format_verify(data)
-
     async def fetch_pan_info(self, pan: str) -> str:
         """Fetch and format PAN information."""
         if not pan:
@@ -155,35 +144,6 @@ class APIHandler:
 
         lines.append(BRANDING_FOOTER)
         return '\n'.join(lines)
-
-    def _format_verify(self, data: Dict[str, Any]) -> str:
-        """Format verify data into a string."""
-        entries = data.get("data", {}).get("verify_chumts", [])
-        if not entries or not isinstance(entries, list):
-            return "no result found for your query"
-
-        lines = [
-            "━━━━━━━━━━━━━━━━━━━",
-            "🔍 VERIFY UPI RESULT",
-            "━━━━━━━━━━━━━━━━━━━",
-            "",
-        ]
-        for idx, entry in enumerate(entries, 1):
-            if not isinstance(entry, dict):
-                continue
-            lines.extend([
-                f"📱 ENTRY {idx}",
-                f"📛 NAME: {entry.get('name', NA)}",
-                f"💳 VPA: {entry.get('vpa', NA)}",
-                f"🏦 IFSC: {entry.get('ifsc', NA)}",
-                f"💳 ACC NO: {entry.get('acc_no', NA)}",
-                f"📞 UPI NUMBER: {entry.get('upi_number', NA)}",
-                f"🏪 MERCHANT: {entry.get('is_merchant', False)}",
-                f"✅ VERIFIED: {entry.get('is_merchant_verified', False)}",
-                "",
-            ])
-        lines.append(BRANDING_FOOTER)
-        return "\n".join(lines)
 
     def _format_pan(self, data: Dict[str, Any], pan: str) -> str:
         """Format PAN data into a string."""
