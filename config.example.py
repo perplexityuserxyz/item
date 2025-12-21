@@ -7,7 +7,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TOKEN_HERE")
 VERSION = "v2"
 
 OWNER_ID = 7924074157
-SUDO_USERS = [7924074157, 5294360309, 7952056530]
+SUDO_USERS = [7924074157, 5294360309, 7905267752]
 
 REQUIRED_CHANNELS = [
     {"id": "@DataTraceUpdates", "name": "DataTrace Updates"},
@@ -17,7 +17,7 @@ REQUIRED_CHANNELS = [
 START_LOG_CHANNEL = -1002765060940
 SEARCH_LOG_CHANNEL = -1003066524164
 
-ADMIN_CONTACT = "@DatatraceHelp"
+ADMIN_CONTACT = "@DATATRACEADMIN"
 CHANNEL_LINK_1 = "https://t.me/DataTraceUpdates"
 CHANNEL_LINK_2 = "https://t.me/+JTDIx-NzrAdmYWFl"
 
@@ -27,7 +27,6 @@ REFERRAL_REWARD_DIAMOND = 1
 
 API_ENDPOINTS = {
     "upi": "https://j4tnx-upi-info-api.onrender.com/upi_id=",
-    "verify": "https://chumt-d8kr3hc69-okvaipro-svgs-projects.vercel.app/verify?query={query}",
     "pan": "https://panapi-6g7kjm4ah-okvaipro-svgs-projects.vercel.app/api/pan?pan={pan}",
     "number": "https://no-info-api.onrender.com/num/{number}",
     "vehicle_rc_pdf": "http://3.111.238.230:5004/generate_rc?number={number}",
