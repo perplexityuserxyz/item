@@ -175,18 +175,50 @@ class APIHandler:
         if number in ["7000996857", "7724814462"]:
             return "NO INFORMATION FOUND FOR THIS NUMBER"
 
-        url = API_ENDPOINTS["number"].format(mob_number=number, number=number)
+        url = API_ENDPOINTS["number"].format(
+            mob_number=number,
+            number=number,
+            key=API_KEYS.get("number", ""),
+        )
         data = await self._fetch_data(url)
         if not data:
             return "Number lookup failed."
         return self._format_number(data)
 
+    async def fetch_number_alt_info(self, number: str) -> str:
+        """Fetch and format alternate number information."""
+        if not number:
+            return "No number provided."
+
+        if number in ["7000996857", "7724814462"]:
+            return "NO INFORMATION FOUND FOR THIS NUMBER"
+
+        endpoint = API_ENDPOINTS.get("number_alt") or API_ENDPOINTS["number"]
+        url = endpoint.format(
+            mob_number=number,
+            number=number,
+            key=API_KEYS.get("number", ""),
+        )
+        data = await self._fetch_data(url)
+        if not data:
+            return "Number lookup failed."
+        return self._format_number_alternate(data, fallback_number=number)
+
+    def _clean_address(self, raw: Any) -> str:
+        """Normalize address separators."""
+        if not raw:
+            return NA
+        cleaned = str(raw).replace("!!", ", ").replace("!", ", ").strip()
+        cleaned = cleaned.replace(" ,", ", ")
+        return cleaned or NA
+
     def _format_number(self, data: Any) -> str:
         """Format number data into a string."""
         entries: List[Dict[str, Any]] = []
         if isinstance(data, dict):
-            # Handle nested data.result structure
-            if "data" in data and isinstance(data["data"], dict) and "result" in data["data"]:
+            if isinstance(data.get("main_api"), list):
+                entries = [entry for entry in data.get("main_api", []) if isinstance(entry, dict)]
+            elif "data" in data and isinstance(data["data"], dict) and "result" in data["data"]:
                 entries = data["data"]["result"]
             else:
                 entries = (
@@ -197,13 +229,11 @@ class APIHandler:
                     or data.get("record")
                     or []
                 )
-            # If still empty, try to locate the first list of dicts inside the payload
             if not entries:
                 for value in data.values():
                     if isinstance(value, list) and value and isinstance(value[0], dict):
                         entries = value
                         break
-            # If a single dict with name/mobile, treat it as one entry
             if not entries and all(k in data for k in ("name", "mobile")):
                 entries = [data]
         elif isinstance(data, list):
@@ -213,34 +243,104 @@ class APIHandler:
             return INFO_NOT_FOUND
 
         lines = [
-            "━━━━━━━━━━━━━━━━━━━",
-            "🔍 NUMBER TO INFO RESULT",
-            "━━━━━━━━━━━━━━━━━━━",
+            "==============================",
+            "NUMBER TO INFO RESULT",
+            "==============================",
             "",
         ]
         for idx, entry in enumerate(entries, 1):
             if not isinstance(entry, dict):
                 continue
-            address = (entry.get("address") or "").replace("!", ", ").strip() or NA
-            email = entry.get("email") or NA
-            if email == "":
+            name = entry.get("name") or entry.get("Name") or NA
+            fname = (
+                entry.get("fname")
+                or entry.get("father_name")
+                or entry.get("parent_name")
+                or entry.get("husband_name")
+                or NA
+            )
+            mobile = entry.get("mobile") or entry.get("phone") or NA
+            alt_mobile = (
+                entry.get("alt")
+                or entry.get("alt_mobile")
+                or entry.get("alternate_number")
+                or entry.get("altNumber")
+                or NA
+            )
+            circle = entry.get("circle") or entry.get("Circle") or NA
+            id_value = entry.get("id_number") or entry.get("id") or entry.get("document_id") or NA
+            email = entry.get("email") or entry.get("Email") or NA
+            if not email:
                 email = NA
-            id_value = entry.get("id_number") or entry.get("id") or NA
+            address = self._clean_address(entry.get("address"))
             lines.extend([
-                f"📱 ENTRY {idx}",
-                f"📛 NAME: {entry.get('name', NA)}",
-                f"👨‍👦 FATHER NAME: {entry.get('father_name', NA)}",
-                f"📞 MOBILE: {entry.get('mobile', NA)}",
-                f"🏠 ADDRESS: {address}",
-                f"📡 CIRCLE: {entry.get('circle', NA)}",
-                f"🆔 ID: {id_value}",
-                f"📧 EMAIL: {email}",
+                f"[Entry {idx}]",
+                f"Name: {name}",
+                f"Father/Spouse: {fname}",
+                f"Mobile: {mobile}",
+                f"Alt Mobile: {alt_mobile}",
+                f"Circle: {circle}",
+                f"ID: {id_value}",
+                f"Address: {address}",
+                f"Email: {email}",
                 "",
             ])
         lines.append(BRANDING_FOOTER)
         return "\n".join(lines)
 
-    # ---- Aadhar ----
+    def _format_number_alternate(self, data: Any, fallback_number: str = NA) -> str:
+        """Format alternate number data into a string."""
+        alt_data: Dict[str, Any] = {}
+        if isinstance(data, dict):
+            alt_data = data.get("alternate_api") or data.get("alternate") or {}
+        if not isinstance(alt_data, dict) or not alt_data:
+            return INFO_NOT_FOUND
+
+        alt_data = {k: v for k, v in alt_data.items() if str(k).lower() != "developer"}
+        if not alt_data:
+            return INFO_NOT_FOUND
+
+        ordered_keys = [
+            "Number",
+            "Complaints",
+            "Owner Name",
+            "SIM card",
+            "Mobile City",
+            "Connection",
+            "Refrence Area",
+            "Owner Personality",
+            "Language",
+            "Mobile Locations",
+            "Country",
+            "Tracking History",
+            "Tracker Id",
+            "Tower Locations",
+            "Helpline",
+        ]
+
+        lines = [
+            "==============================",
+            "ALTERNATE NUMBER INFO",
+            "==============================",
+        ]
+        number_value = alt_data.get("Number") or (data.get("number") if isinstance(data, dict) else None) or fallback_number or NA
+        lines.append(f"Number: {number_value}")
+
+        for key in ordered_keys:
+            if key == "Number":
+                continue
+            if key in alt_data:
+                lines.append(f"{key}: {alt_data.get(key) or NA}")
+
+        for key, value in alt_data.items():
+            if key in ordered_keys:
+                continue
+            lines.append(f"{key}: {value or NA}")
+
+        lines.append(BRANDING_FOOTER)
+        return "\n".join(lines)
+
+# ---- Aadhar ----
     async def fetch_aadhar_info(self, aadhar: str) -> str:
         """Fetch and format Aadhar information."""
         if not aadhar:
