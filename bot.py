@@ -920,7 +920,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.exception("Unhandled exception", exc_info=context.error)
 
 
-async def main():
+def main():
     if not BOT_TOKEN:
         raise ValueError("BOT_TOKEN missing.")
 
@@ -962,13 +962,8 @@ async def main():
     application.add_error_handler(error_handler)
 
     logger.info("Bot started.")
-    await application.run_polling(allowed_updates=Update.ALL_TYPES)
-
-
-async def _main_wrapper():
-    await main()
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
-    import asyncio
-    asyncio.run(_main_wrapper())
+    main()
