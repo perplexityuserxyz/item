@@ -5,8 +5,9 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
+# Don't hard-fail during import; runtime (bot.py) validates before starting.
 if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN not found! Set BOT_TOKEN in env or .env file.")
+    BOT_TOKEN = ""
 
 VERSION = "v2"
 
