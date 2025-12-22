@@ -719,6 +719,8 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
             result = await api_handler.fetch_pan_info(query)
         elif lookup_type == "number":
             result = await api_handler.fetch_number_info(query)
+        elif lookup_type == "number_alt":
+            result = await api_handler.fetch_number_alt_info(query)
         elif lookup_type == "ip":
             result = await api_handler.fetch_ip_info(query)
         elif lookup_type == "pakistan":
@@ -792,6 +794,12 @@ async def num_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         return await safe_send(update, context, "Usage: /num [number]")
     await handle_lookup(update, context, "number", "".join(context.args))
+
+
+async def num2_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await safe_send(update, context, "Usage: /num2 [number]")
+    await handle_lookup(update, context, "number_alt", "".join(context.args))
 
 
 async def upi_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -928,6 +936,7 @@ def main():
     application.add_handler(CommandHandler("createcode", create_code_command))
 
     application.add_handler(CommandHandler("num", num_command))
+    application.add_handler(CommandHandler("num2", num2_command))
     application.add_handler(CommandHandler("upi", upi_command))
     application.add_handler(CommandHandler("pan", pan_command))
     application.add_handler(CommandHandler("ip", ip_command))
@@ -949,12 +958,3 @@ def main():
 
     application.add_handler(CallbackQueryHandler(button_callback, pattern="^(lookups|help|referral|buy_diamonds|admin_panel|back_main|redeem_info)$"))
     application.add_handler(CallbackQueryHandler(verify_membership_callback, pattern="^verify_membership_\\d+$"))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_direct_input))
-    application.add_error_handler(error_handler)
-
-    logger.info("Bot started.")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
-
-
-if __name__ == "__main__":
-    main()
