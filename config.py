@@ -58,3 +58,10 @@ API_KEYS = {
     "upi": "",
     "numfb": "chxprm456",
 }
+
+BRANDING_FOOTER = (
+    "\n\n----------------------\n"
+    f"Updates: {CHANNEL_LINK_1}\n"
+    f"Support: {CHANNEL_LINK_2}\n"
+    f"Contact: {ADMIN_CONTACT}"
+)
