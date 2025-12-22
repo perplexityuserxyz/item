@@ -243,11 +243,9 @@ class APIHandler:
             return INFO_NOT_FOUND
 
         lines = [
-            "==============================",
-            "NUMBER TO INFO RESULT",
-            "==============================",
-            "",
+            "╔════════ NUMBER INFO ════════╗",
         ]
+        any_rows = False
         for idx, entry in enumerate(entries, 1):
             if not isinstance(entry, dict):
                 continue
@@ -274,17 +272,20 @@ class APIHandler:
                 email = NA
             address = self._clean_address(entry.get("address"))
             lines.extend([
-                f"[Entry {idx}]",
-                f"Name: {name}",
-                f"Father/Spouse: {fname}",
-                f"Mobile: {mobile}",
-                f"Alt Mobile: {alt_mobile}",
-                f"Circle: {circle}",
-                f"ID: {id_value}",
-                f"Address: {address}",
-                f"Email: {email}",
+                f"• Entry {idx}",
+                f"👤 Name: {name}",
+                f"👪 Father/Spouse: {fname}",
+                f"📞 Mobile: {mobile}",
+                f"☎️ Alt Mobile: {alt_mobile}",
+                f"🛰 Circle: {circle}",
+                f"🆔 ID: {id_value}",
+                f"🏠 Address: {address}",
+                f"📧 Email: {email}",
                 "",
             ])
+            any_rows = True
+        if not any_rows:
+            return INFO_NOT_FOUND
         lines.append(BRANDING_FOOTER)
         return "\n".join(lines)
 
@@ -363,23 +364,27 @@ class APIHandler:
         if not entries:
             return "⚠️ No information found for this Aadhar."
 
-        lines = ["╔════════ AADHAR INFO ════════╗", ""]
+        lines = ["╔════════ AADHAR INFO ════════╗"]
+        any_rows = False
         for idx, entry in enumerate(entries, 1):
             if not isinstance(entry, dict):
                 continue
             address = (entry.get("address") or "").replace("!", ", ").strip() or NA
             alt_mobile = entry.get("alt") or entry.get("alt_mobile") or NA
             lines.extend([
-                f"[Entry #{idx}]",
-                f"Name: {entry.get('name', NA)}",
-                f"Father: {entry.get('fname') or entry.get('father_name', NA)}",
-                f"Mobile: {entry.get('mobile', NA)}",
-                f"Alt Mobile: {alt_mobile}",
-                f"Address: {address}",
-                f"Circle: {entry.get('circle', NA)}",
-                f"ID: {entry.get('id', NA)}",
+                f"• Entry #{idx}",
+                f"👤 Name: {entry.get('name', NA)}",
+                f"👪 Father: {entry.get('fname') or entry.get('father_name', NA)}",
+                f"📞 Mobile: {entry.get('mobile', NA)}",
+                f"☎️ Alt Mobile: {alt_mobile}",
+                f"🛰 Circle: {entry.get('circle', NA)}",
+                f"🆔 ID: {entry.get('id', NA)}",
+                f"🏠 Address: {address}",
                 "",
             ])
+            any_rows = True
+        if not any_rows:
+            return "⚠️ No information found for this Aadhar."
         lines.append(BRANDING_FOOTER)
         return "\n".join(lines)
 
