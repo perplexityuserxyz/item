@@ -30,10 +30,17 @@ MIN_DIAMOND_PURCHASE = 50
 DIAMOND_PRICE_INR = 5  # per diamond
 REFERRAL_REWARD_DIAMOND = 1
 
+NUMBER_API_ENDPOINT = os.getenv(
+    "NUMBER_API_ENDPOINT",
+    "https://anku-num-info-five.vercel.app/search?num={number}&key={key}",
+)
+NUMBER_ALT_API_ENDPOINT = os.getenv("NUMBER_ALT_API_ENDPOINT", NUMBER_API_ENDPOINT)
+
 API_ENDPOINTS = {
     "upi": "https://j4tnx-upi-info-api.onrender.com/upi_id=",
     "pan": "https://panapi-6g7kjm4ah-okvaipro-svgs-projects.vercel.app/api/pan?pan={pan}",
-    "number": "https://no-info-api.onrender.com/num/{number}",
+    "number": NUMBER_API_ENDPOINT,
+    "number_alt": NUMBER_ALT_API_ENDPOINT,
     "vehicle_rc_pdf": "http://3.111.238.230:5004/generate_rc?number={number}",
     "ip": "https://karmali.serv00.net/ip_api.php",
     "pakistan": "https://pak-num-api.vercel.app/search",
@@ -46,15 +53,8 @@ API_ENDPOINTS = {
 }
 
 API_KEYS = {
-    "number": "",
+    "number": os.getenv("NUMBER_API_KEY", "c5adb0fc9372269f"),
     "aadhar_family": "datatrace",
     "upi": "",
     "numfb": "chxprm456",
 }
-
-BRANDING_FOOTER = (
-    "\n\n----------------------\n"
-    f"Updates: {CHANNEL_LINK_1}\n"
-    f"Support: {CHANNEL_LINK_2}\n"
-    f"Contact: {ADMIN_CONTACT}"
-)
