@@ -212,39 +212,52 @@ class APIHandler:
         cleaned = cleaned.replace(" ,", ", ")
         return cleaned or NA
 
-    def _format_number(self, data: Any) -> str:
-        """Format number data into a string."""
+    def _extract_number_entries(self, data: Any) -> List[Dict[str, Any]]:
+        """Extract number entries from multiple possible payload shapes."""
         entries: List[Dict[str, Any]] = []
         if isinstance(data, dict):
-            if isinstance(data.get("main_api"), list):
-                entries = [entry for entry in data.get("main_api", []) if isinstance(entry, dict)]
-            elif "data" in data and isinstance(data["data"], dict) and "result" in data["data"]:
-                entries = data["data"]["result"]
-            else:
-                entries = (
-                    data.get("data")
-                    or data.get("result")
-                    or data.get("results")
-                    or data.get("records")
-                    or data.get("record")
-                    or []
-                )
+            main_api = data.get("main_api")
+            if isinstance(main_api, dict):
+                nested = main_api.get("data")
+                if isinstance(nested, list):
+                    entries = [entry for entry in nested if isinstance(entry, dict)]
+            elif isinstance(main_api, list):
+                entries = [entry for entry in main_api if isinstance(entry, dict)]
+
+            if not entries:
+                nested_data = data.get("data")
+                if isinstance(nested_data, dict) and isinstance(nested_data.get("result"), list):
+                    entries = [entry for entry in nested_data.get("result", []) if isinstance(entry, dict)]
+                elif isinstance(nested_data, list):
+                    entries = [entry for entry in nested_data if isinstance(entry, dict)]
+
+            if not entries:
+                for key in ("result", "results", "records", "record"):
+                    if isinstance(data.get(key), list):
+                        entries = [entry for entry in data.get(key, []) if isinstance(entry, dict)]
+                        break
+
             if not entries:
                 for value in data.values():
                     if isinstance(value, list) and value and isinstance(value[0], dict):
-                        entries = value
+                        entries = [entry for entry in value if isinstance(entry, dict)]
                         break
+
             if not entries and all(k in data for k in ("name", "mobile")):
                 entries = [data]
         elif isinstance(data, list):
             entries = [d for d in data if isinstance(d, dict)]
+        return entries
 
-        if not entries or not isinstance(entries, list):
+
+
+    def _format_number(self, data: Any) -> str:
+        """Format number data into a string."""
+        entries = self._extract_number_entries(data)
+        if not entries:
             return INFO_NOT_FOUND
 
-        lines = [
-            "╔════════ NUMBER INFO ════════╗",
-        ]
+        lines = ["\U0001F4F1 Number Info", "\u2501" * 14]
         any_rows = False
         for idx, entry in enumerate(entries, 1):
             if not isinstance(entry, dict):
@@ -272,15 +285,15 @@ class APIHandler:
                 email = NA
             address = self._clean_address(entry.get("address"))
             lines.extend([
-                f"• Entry {idx}",
-                f"👤 Name: {name}",
-                f"👪 Father/Spouse: {fname}",
-                f"📞 Mobile: {mobile}",
-                f"☎️ Alt Mobile: {alt_mobile}",
-                f"🛰 Circle: {circle}",
-                f"🆔 ID: {id_value}",
-                f"🏠 Address: {address}",
-                f"📧 Email: {email}",
+                f"#{idx} - {name if name != NA else 'Entry'}",
+                f"\U0001F464 Name: {name}",
+                f"\U0001F9D4 Father/Spouse: {fname}",
+                f"\U0001F4DE Mobile: {mobile}",
+                f"\U0001F4F2 Alt Mobile: {alt_mobile}",
+                f"\U0001F4CD Circle: {circle}",
+                f"\U0001F194 ID: {id_value}",
+                f"\U0001F3E0 Address: {address}",
+                f"\u2709\ufe0f Email: {email}",
                 "",
             ])
             any_rows = True
@@ -289,26 +302,35 @@ class APIHandler:
         lines.append(BRANDING_FOOTER)
         return "\n".join(lines)
 
+
     def _format_number_alternate(self, data: Any, fallback_number: str = NA) -> str:
         """Format alternate number data into a string."""
         alt_data: Dict[str, Any] = {}
         if isinstance(data, dict):
             alt_data = data.get("alternate_api") or data.get("alternate") or {}
-        if not isinstance(alt_data, dict) or not alt_data:
-            return INFO_NOT_FOUND
+        if not isinstance(alt_data, dict):
+            alt_data = {}
 
         alt_data = {k: v for k, v in alt_data.items() if str(k).lower() != "developer"}
-        if not alt_data:
+
+        main_entries: List[Dict[str, Any]] = []
+        if isinstance(data, dict):
+            main_entries = self._extract_number_entries(data.get("main_api") or {})
+            if not main_entries:
+                main_entries = self._extract_number_entries(data)
+
+        if not alt_data and not main_entries:
             return INFO_NOT_FOUND
 
         ordered_keys = [
-            "Number",
             "Complaints",
             "Owner Name",
             "SIM card",
+            "Mobile State",
             "Mobile City",
             "Connection",
             "Refrence Area",
+            "Refrence City",
             "Owner Personality",
             "Language",
             "Mobile Locations",
@@ -318,25 +340,66 @@ class APIHandler:
             "Tower Locations",
             "Helpline",
         ]
+        emoji_map = {
+            "Complaints": "\u26a0\ufe0f",
+            "Owner Name": "\U0001F9CD",
+            "SIM card": "\U0001F4F6",
+            "Mobile State": "\U0001F5FA",
+            "Mobile City": "\U0001F307",
+            "Connection": "\U0001F50C",
+            "Refrence City": "\U0001F4CD",
+            "Refrence Area": "\U0001F4CD",
+            "Owner Personality": "\U0001F9E0",
+            "Language": "\U0001F5E3",
+            "Mobile Locations": "\U0001F9ED",
+            "Country": "\U0001F30D",
+            "Tracking History": "\U0001F463",
+            "Tracker Id": "\U0001F194",
+            "Tower Locations": "\U0001F4E1",
+            "Helpline": "\U0001F198",
+        }
 
         lines = [
-            "==============================",
-            "ALTERNATE NUMBER INFO",
-            "==============================",
+            "\U0001F4DE Alternate Number Info",
+            "\u2501" * 18,
         ]
         number_value = alt_data.get("Number") or (data.get("number") if isinstance(data, dict) else None) or fallback_number or NA
-        lines.append(f"Number: {number_value}")
+        lines.append(f"\u260e\ufe0f Number: {number_value}")
 
-        for key in ordered_keys:
-            if key == "Number":
-                continue
-            if key in alt_data:
-                lines.append(f"{key}: {alt_data.get(key) or NA}")
+        if main_entries:
+            lines.append("")
+            lines.append("\U0001F539 Primary Data")
+            for idx, entry in enumerate(main_entries, 1):
+                if not isinstance(entry, dict):
+                    continue
+                name = entry.get("name") or entry.get("Name") or NA
+                fname = entry.get("fname") or entry.get("father_name") or entry.get("parent_name") or entry.get("husband_name") or NA
+                mobile = entry.get("mobile") or entry.get("phone") or number_value
+                alt_mobile = entry.get("alt") or entry.get("alt_mobile") or entry.get("alternate_number") or entry.get("altNumber") or NA
+                circle = entry.get("circle") or entry.get("Circle") or NA
+                address = self._clean_address(entry.get("address"))
+                lines.extend([
+                    f"[#{idx}] {name if name != NA else 'Detail'}",
+                    f"\U0001F464 Name: {name}",
+                    f"\U0001F9D4 Father/Spouse: {fname}",
+                    f"\U0001F4DE Mobile: {mobile}",
+                    f"\U0001F4F2 Alt Mobile: {alt_mobile}",
+                    f"\U0001F4CD Circle: {circle}",
+                    f"\U0001F3E0 Address: {address}",
+                    "",
+                ])
 
-        for key, value in alt_data.items():
-            if key in ordered_keys:
-                continue
-            lines.append(f"{key}: {value or NA}")
+        if alt_data:
+            lines.append("\u2139\ufe0f Caller Insights")
+            for key in ordered_keys:
+                if key in alt_data:
+                    prefix = emoji_map.get(key, "\u2022")
+                    lines.append(f"{prefix} {key}: {alt_data.get(key) or NA}")
+
+            for key, value in alt_data.items():
+                if key in ordered_keys:
+                    continue
+                lines.append(f"\u2022 {key}: {value or NA}")
 
         lines.append(BRANDING_FOOTER)
         return "\n".join(lines)
