@@ -33,9 +33,12 @@ REFERRAL_REWARD_DIAMOND = 1
 
 NUMBER_API_ENDPOINT = os.getenv(
     "NUMBER_API_ENDPOINT",
+    "https://7.toxictanji0503.workers.dev/paidnumapi?num={number}",
+)
+NUMBER_ALT_API_ENDPOINT = os.getenv(
+    "NUMBER_ALT_API_ENDPOINT",
     "https://anku-num-info-five.vercel.app/search?num={number}&key={key}",
 )
-NUMBER_ALT_API_ENDPOINT = os.getenv("NUMBER_ALT_API_ENDPOINT", NUMBER_API_ENDPOINT)
 
 API_ENDPOINTS = {
     "upi": "https://j4tnx-upi-info-api.onrender.com/upi_id=",
