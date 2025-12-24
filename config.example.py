@@ -3,12 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-# Don't hard-fail during import; runtime (bot.py) validates before starting.
-if not BOT_TOKEN:
-    BOT_TOKEN = ""
-
+BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TOKEN_HERE")
 VERSION = "v2"
 
 OWNER_ID = 7924074157
@@ -24,11 +19,10 @@ SEARCH_LOG_CHANNEL = -1003066524164
 
 ADMIN_CONTACT = "@DATATRACEADMIN"
 CHANNEL_LINK_1 = "https://t.me/DataTraceUpdates"
-CHANNEL_LINK_2 = "https://t.me/+sMaYcNYXgf8zYmJl"
+CHANNEL_LINK_2 = "https://t.me/+Cw_VuFKRfoBiNDE1"
 
-# Diamonds
 MIN_DIAMOND_PURCHASE = 50
-DIAMOND_PRICE_INR = 5  # per diamond
+DIAMOND_PRICE_INR = 5
 REFERRAL_REWARD_DIAMOND = 1
 
 NUMBER_API_ENDPOINT = os.getenv(
