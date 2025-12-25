@@ -16,7 +16,7 @@ SUDO_USERS = [7924074157, 5294360309, 7905267752, 7952056530]
 
 REQUIRED_CHANNELS = [
     {"id": "@DataTraceUpdates", "name": "DataTrace Updates"},
-    {"id": -1001598893381, "name": "DataTrace Support"},
+    {"id": -1003646854089, "name": "DataTrace Support"},
 ]
 
 START_LOG_CHANNEL = -1002765060940
@@ -24,7 +24,7 @@ SEARCH_LOG_CHANNEL = -1003066524164
 
 ADMIN_CONTACT = "@DATATRACEADMIN"
 CHANNEL_LINK_1 = "https://t.me/DataTraceUpdates"
-CHANNEL_LINK_2 = "https://t.me/+Cw_VuFKRfoBiNDE1"
+CHANNEL_LINK_2 = "https://t.me/+FBQcU1KM4Yg5Yjhl"
 
 # Diamonds
 MIN_DIAMOND_PURCHASE = 50
