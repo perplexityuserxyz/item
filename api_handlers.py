@@ -204,12 +204,23 @@ class APIHandler:
             return "Number lookup failed."
         return self._format_number_alternate(data, fallback_number=number)
 
+    def _clean_text(self, value: Any, default: str = NA) -> str:
+        """Trim whitespace and collapse duplicate spaces for display."""
+        if value is None:
+            return default
+        text = str(value).strip()
+        if not text:
+            return default
+        normalized = " ".join(text.split())
+        return normalized or default
+
     def _clean_address(self, raw: Any) -> str:
         """Normalize address separators."""
         if not raw:
             return NA
         cleaned = str(raw).replace("!!", ", ").replace("!", ", ").strip()
         cleaned = cleaned.replace(" ,", ", ")
+        cleaned = " ".join(cleaned.split())
         return cleaned or NA
 
     def _extract_number_entries(self, data: Any) -> List[Dict[str, Any]]:
@@ -257,35 +268,49 @@ class APIHandler:
         if not entries:
             return INFO_NOT_FOUND
 
-        lines = ["\U0001F4F1 Number Info", "\u2501" * 14]
+        lines = ["╔════════ NUMBER INFO ════════╗", ""]
+        seen = set()
         any_rows = False
-        for idx, entry in enumerate(entries, 1):
+        row_idx = 0
+        for entry in entries:
             if not isinstance(entry, dict):
                 continue
-            name = entry.get("name") or entry.get("Name") or NA
-            fname = (
+            name = self._clean_text(entry.get("name") or entry.get("Name"))
+            fname = self._clean_text(
                 entry.get("fname")
                 or entry.get("father_name")
                 or entry.get("parent_name")
                 or entry.get("husband_name")
-                or NA
             )
-            mobile = entry.get("mobile") or entry.get("phone") or NA
-            alt_mobile = (
+            mobile = self._clean_text(entry.get("mobile") or entry.get("phone"))
+            alt_mobile = self._clean_text(
                 entry.get("alt")
                 or entry.get("alt_mobile")
                 or entry.get("alternate_number")
                 or entry.get("altNumber")
-                or NA
             )
-            circle = entry.get("circle") or entry.get("Circle") or NA
-            id_value = entry.get("id_number") or entry.get("id") or entry.get("document_id") or NA
-            email = entry.get("email") or entry.get("Email") or NA
-            if not email:
-                email = NA
+            circle = self._clean_text(entry.get("circle") or entry.get("Circle"))
+            id_value = self._clean_text(entry.get("id_number") or entry.get("id") or entry.get("document_id"))
+            email = self._clean_text(entry.get("email") or entry.get("Email"), default=NA)
             address = self._clean_address(entry.get("address"))
+            if len(address) > 100:
+                address = address[:97] + "..."
+
+            entry_key = (
+                name.lower(),
+                fname.lower(),
+                mobile,
+                alt_mobile,
+                id_value.lower(),
+                address.lower(),
+            )
+            if entry_key in seen:
+                continue
+            seen.add(entry_key)
+
+            row_idx += 1
             lines.extend([
-                f"#{idx} - {name if name != NA else 'Entry'}",
+                f"• Entry #{row_idx}: {name if name != NA else 'Unknown'}",
                 f"\U0001F464 Name: {name}",
                 f"\U0001F9D4 Father/Spouse: {fname}",
                 f"\U0001F4DE Mobile: {mobile}",
