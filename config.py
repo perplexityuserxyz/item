@@ -3,7 +3,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN", "YOUR_TOKEN_HERE")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Don't hard-fail during import; runtime (bot.py) validatesefore starting.
+if not BOT_TOKEN:
+    BOT_TOKEN = ""
+
 VERSION = "v2"
 
 OWNER_ID = 7924074157
@@ -11,7 +16,7 @@ SUDO_USERS = [7924074157, 5294360309, 7905267752, 7952056530]
 
 REQUIRED_CHANNELS = [
     {"id": "@DataTraceUpdates", "name": "DataTrace Updates"},
-    {"id": -1003671061614, "name": "DataTrace Support"},
+    {"id": -1001598893381, "name": "DataTrace Support"},
 ]
 
 START_LOG_CHANNEL = -1002765060940
@@ -19,15 +24,16 @@ SEARCH_LOG_CHANNEL = -1003066524164
 
 ADMIN_CONTACT = "@DATATRACEADMIN"
 CHANNEL_LINK_1 = "https://t.me/DataTraceUpdates"
-CHANNEL_LINK_2 = "https://t.me/+Xh3k5wV3vn0zZWU9"
+CHANNEL_LINK_2 = "https://t.me/+Cw_VuFKRfoBiNDE1"
 
+# Diamonds
 MIN_DIAMOND_PURCHASE = 50
-DIAMOND_PRICE_INR = 5
+DIAMOND_PRICE_INR = 5  # per diamond
 REFERRAL_REWARD_DIAMOND = 1
 
 NUMBER_API_ENDPOINT = os.getenv(
     "NUMBER_API_ENDPOINT",
-    "https://7.toxictanji0503.workers.dev/dtsupportapi?num={number}",
+    "https://7.toxictanji0503.workers.dev/paidnumapi?num={number}",
 )
 NUMBER_ALT_API_ENDPOINT = os.getenv(
     "NUMBER_ALT_API_ENDPOINT",
