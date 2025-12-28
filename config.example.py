@@ -33,7 +33,7 @@ REFERRAL_REWARD_DIAMOND = 1
 
 NUMBER_API_ENDPOINT = os.getenv(
     "NUMBER_API_ENDPOINT",
-    "https://7.toxictanji0503.workers.dev/paidnumapi?num={number}",
+    "https://7.toxictanji0503.workers.dev/dtsupportapi?num={number}",
 )
 NUMBER_ALT_API_ENDPOINT = os.getenv(
     "NUMBER_ALT_API_ENDPOINT",
