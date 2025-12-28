@@ -230,25 +230,32 @@ async def enforce_membership(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user = update.effective_user
     if not user:
         return False
+    failed_channels = []
     for channel in REQUIRED_CHANNELS:
         try:
             member = await context.bot.get_chat_member(channel["id"], user.id)
             if member.status in ["left", "kicked"]:
-                raise ValueError("not joined")
+                failed_channels.append(channel)
         except Exception:
-            keyboard = [
-                [InlineKeyboardButton("Join Updates", url=CHANNEL_LINK_1)],
-                [InlineKeyboardButton("Join Support", url=CHANNEL_LINK_2)],
-                [InlineKeyboardButton("Verify Membership", callback_data=f"verify_membership_{user.id}")],
-            ]
-            await safe_send(
-                update,
-                context,
-                "Access restricted. Join both channels first, then tap Verify.",
-                reply_markup=InlineKeyboardMarkup(keyboard),
-                autodelete=False,
-            )
-            return False
+            # For private channels (negative ID), skip if can't check (bot not admin/member)
+            if isinstance(channel["id"], int) and channel["id"] < 0:
+                continue
+            # For public channels, assume not joined if can't check
+            failed_channels.append(channel)
+    if failed_channels:
+        keyboard = [
+            [InlineKeyboardButton("Join Updates", url=CHANNEL_LINK_1)],
+            [InlineKeyboardButton("Join Support", url=CHANNEL_LINK_2)],
+            [InlineKeyboardButton("Verify Membership", callback_data=f"verify_membership_{user.id}")],
+        ]
+        await safe_send(
+            update,
+            context,
+            "Access restricted. Join both channels first, then tap Verify.",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            autodelete=False,
+        )
+        return False
     return True
 
 
