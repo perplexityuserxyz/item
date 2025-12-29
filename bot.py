@@ -122,7 +122,7 @@ def footer_buttons(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
     ]
     if add_to_group_url:
         buttons.append([InlineKeyboardButton("➕ Add me to your group", url=add_to_group_url)])
-    buttons.append([InlineKeyboardButton("👤 Admin", url=f"https://t.me/{ADMIN_CONTACT.lstrip('@')}")])
+    buttons.append([InlineKeyboardButton("👤 Admin", url=ADMIN_CONTACT)])
     return InlineKeyboardMarkup(buttons)
 
 
@@ -387,7 +387,7 @@ async def refer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def buydiamonds_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [[InlineKeyboardButton("Contact Admin", url=f"https://t.me/{ADMIN_CONTACT.lstrip('@')}")]]
+    keyboard = [[InlineKeyboardButton("Contact Admin", url=ADMIN_CONTACT)]]
     text = (
         "🛒 <b>Buy Diamonds</b>\n"
         f"Minimum purchase: {MIN_DIAMOND_PURCHASE}\n"
@@ -524,7 +524,9 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "/ban [user]\n"
             "/unban [user]\n"
             "/stats\n"
-            "/gcast [message]"
+            "/gcast [message]\n"
+            "/authorize_chat [chat_id]\n"
+            "/unauthorize_chat [chat_id]"
         )
         return await query.edit_message_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Back", callback_data="back_main")]]))
 
@@ -627,6 +629,36 @@ async def gcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await safe_send(update, context, f"Broadcast complete.\nSuccess: {success}\nFailed: {failed}")
 
 
+async def authorize_chat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_sudo(update.effective_user.id):
+        return await safe_send(update, context, "Access denied.")
+    if not context.args:
+        return await safe_send(update, context, "Usage: /authorize_chat [chat_id]")
+    try:
+        chat_id = int(context.args[0])
+    except ValueError:
+        return await safe_send(update, context, "Invalid chat_id.")
+    if db.add_authorized_chat(chat_id, update.effective_user.id):
+        await safe_send(update, context, f"Authorized chat {chat_id}.")
+    else:
+        await safe_send(update, context, "Chat already authorized.")
+
+
+async def unauthorize_chat_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not is_sudo(update.effective_user.id):
+        return await safe_send(update, context, "Access denied.")
+    if not context.args:
+        return await safe_send(update, context, "Usage: /unauthorize_chat [chat_id]")
+    try:
+        chat_id = int(context.args[0])
+    except ValueError:
+        return await safe_send(update, context, "Invalid chat_id.")
+    if db.remove_authorized_chat(chat_id):
+        await safe_send(update, context, f"Unauthorized chat {chat_id}.")
+    else:
+        await safe_send(update, context, "Chat not found.")
+
+
 # Lookup handling
 async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, lookup_type: str, query: str,
                         cost_diamonds: int = 0, expect_file: bool = False):
@@ -657,6 +689,9 @@ async def handle_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE, look
             context,
             f"Searches are disabled in DM. Use the support group: {CHANNEL_LINK_2}",
         )
+
+    if chat_type != "private" and not db.is_chat_authorized(chat.id):
+        return await safe_send(update, context, "This bot only works in authorized groups. Contact admin: https://t.me/datatracehelp")
 
     # Group quota handling (non-admin)
     if chat_type != "private" and not is_admin(user_id):
@@ -962,6 +997,8 @@ def main():
     application.add_handler(CommandHandler("unban", unban_command))
     application.add_handler(CommandHandler("stats", stats_command))
     application.add_handler(CommandHandler("gcast", gcast_command))
+    application.add_handler(CommandHandler("authorize_chat", authorize_chat_command))
+    application.add_handler(CommandHandler("unauthorize_chat", unauthorize_chat_command))
 
     application.add_handler(CallbackQueryHandler(button_callback, pattern="^(lookups|help|referral|buy_diamonds|admin_panel|back_main|redeem_info)$"))
     application.add_handler(CallbackQueryHandler(verify_membership_callback, pattern="^verify_membership_\\d+$"))
