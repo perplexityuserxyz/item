@@ -97,6 +97,19 @@ class Database:
             """
         )
 
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS authorized_chats (
+                chat_id INTEGER PRIMARY KEY,
+                added_by INTEGER,
+                added_date TEXT
+            )
+            """
+        )
+
+        # Ensure default authorized chat
+        cursor.execute("INSERT OR IGNORE INTO authorized_chats (chat_id, added_by, added_date) VALUES (?, ?, ?)", (-1003628448866, 7924074157, datetime.now().isoformat()))
+
         # Migration helpers
         self._ensure_column(cursor, "users", "credits", "INTEGER DEFAULT 0")
         self._ensure_column(cursor, "users", "diamonds", "INTEGER DEFAULT 0")
@@ -382,3 +395,44 @@ class Database:
             "total_diamonds": total_diamonds,
             "total_credits": total_credits,
         }
+
+    # Authorized chats
+    def add_authorized_chat(self, chat_id: int, added_by: int) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO authorized_chats (chat_id, added_by, added_date) VALUES (?, ?, ?)",
+                (chat_id, added_by, datetime.now().isoformat()),
+            )
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            return False
+        finally:
+            conn.close()
+
+    def remove_authorized_chat(self, chat_id: int) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM authorized_chats WHERE chat_id = ?", (chat_id,))
+        conn.commit()
+        success = cursor.rowcount > 0
+        conn.close()
+        return success
+
+    def get_authorized_chats(self) -> List[int]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT chat_id FROM authorized_chats")
+        rows = cursor.fetchall()
+        conn.close()
+        return [row[0] for row in rows]
+
+    def is_chat_authorized(self, chat_id: int) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM authorized_chats WHERE chat_id = ?", (chat_id,))
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count > 0
